@@ -2,14 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
 
   // Worker name. This becomes <name>.<your-subdomain>.workers.dev
-  "name": "whitedragon-dev",
+  "name": "www",
 
-  // Pins the Workers runtime behaviour t
+  // Pins the Workers runtime behaviour to this date.
   "compatibility_date": "2026-09-21",
 
   "assets": {
     // Folder that holds index.html, 404.html, WD-NCL/ and WD-SAL/
-    "directory": "./public",
+    "directory": "./",
 
     // Serve the nearest 404.html (with a real 404 status) for unknown URLs.
     "not_found_handling": "404-page"
