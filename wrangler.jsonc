@@ -4,7 +4,7 @@
   // Worker name. This becomes <name>.<your-subdomain>.workers.dev
   "name": "whitedragon-dev",
 
-  // Pins the Workers runtime behaviour to this date.
+  // Pins the Workers runtime behaviour t
   "compatibility_date": "2026-09-21",
 
   "assets": {
