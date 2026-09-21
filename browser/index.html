@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Portable Browser</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+body{height:100vh;display:flex;flex-direction:column;overflow:hidden;--bg:#FFFFFF;--bar:#F6F6F5;--text:#131316;--text-dim:#6C6C72;--btn:#EDEDEB;--border:#E1E1DE;--accent:#2547F4;--accent-dim:#E9ECFE;--warn:#C7431E;background:var(--bg);transition:background .2s ease,color .2s ease}
+body.dark{--bg:#0A0A0C;--bar:#151517;--text:#F1F1EF;--text-dim:#8B8B91;--btn:#1D1D20;--border:#29292D;--accent:#6C89FF;--accent-dim:#16193A;--warn:#FF8A63}
+.tabs{height:34px;background:var(--bar);display:flex;overflow-x:auto;border-bottom:1px solid var(--border);padding:0 4px;align-items:flex-end;flex-shrink:0}
+.tab{display:flex;align-items:center;padding:0 10px;background:transparent;color:var(--text-dim);border-radius:4px 4px 0 0;cursor:pointer;max-width:160px;min-width:60px;flex-shrink:0;font-size:11px;height:30px;margin-right:2px;border:1px solid transparent;border-bottom:none}
+.tab.active{background:var(--bg);color:var(--text);font-weight:500;border-color:var(--border);box-shadow:inset 0 2px 0 var(--accent)}
+.tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;pointer-events:none}
+.tab .close{margin-left:4px;background:none;border:none;color:inherit;cursor:pointer;font-size:14px;opacity:.5}
+.tab .close:hover{opacity:1}
+.newtab-btn{width:26px;height:26px;background:transparent;color:var(--text-dim);border:none;font-size:18px;cursor:pointer;border-radius:4px;flex-shrink:0}
+.newtab-btn:hover{background:var(--btn);color:var(--text)}
+.topbar{height:42px;background:var(--bar);display:flex;align-items:center;padding:0 6px;gap:2px;border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar button{width:28px;height:28px;background:transparent;color:var(--text-dim);border:none;border-radius:4px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.topbar button:hover{background:var(--btn)}
+.topbar button:disabled{opacity:.3}
+.topbar .star-btn{font-size:16px;color:var(--text-dim)}
+.topbar .star-btn.active{color:var(--accent)}
+.topbar .theme-btn{font-size:14px}
+.url-wrapper{flex:1;display:flex;align-items:center;min-width:0;gap:0;height:30px;border:1px solid var(--border);border-radius:4px;background:var(--btn);overflow:hidden}
+.url-wrapper:focus-within{border-color:var(--accent)}
+.url-wrapper select{height:100%;padding:0 4px;background:transparent;color:var(--text-dim);border:none;border-right:1px solid var(--border);font-size:10px;max-width:90px;flex-shrink:0;cursor:pointer}
+.url-wrapper input{flex:1;height:100%;padding:0 10px;background:transparent;color:var(--text);border:none;outline:none;font-size:12px;min-width:0}
+.right-btns{display:flex;gap:1px;position:relative}
+.right-btns button{width:28px;height:28px;font-size:13px}
+.menu{position:fixed;top:80px;right:6px;background:var(--bar);border:1px solid var(--border);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:240px;max-height:70vh;overflow-y:auto;z-index:99999;display:none;padding:4px 0}
+.menu.show{display:block}
+.menu-item{padding:10px 14px;color:var(--text);font-size:12px;cursor:pointer;display:flex;justify-content:space-between;gap:12px}
+.menu-item:hover{background:var(--btn)}
+.menu-divider{height:1px;background:var(--border);margin:4px 0}
+.container{flex:1;position:relative;background:var(--bg);overflow:hidden}
+.render-container{width:100%;height:100%;display:none}
+.render-container.active{display:block}
+.render-container iframe{width:100%;height:100%;border:none;display:block;background:#fff}
+.page{position:absolute;top:0;left:0;width:100%;height:100%;overflow-y:auto;display:none;padding:14px;background:var(--bg);z-index:10}
+.page.active{display:block}
+.home-content{max-width:560px;margin:0 auto;padding:40px 0 16px}
+.home-eyebrow{text-align:center;color:var(--accent);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.home-title{text-align:center;color:var(--text);font-size:26px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px}
+.home-credit{text-align:center;color:var(--text-dim);font-size:10px;margin-bottom:24px}
+.search-row{display:flex;margin-bottom:10px;border:1px solid var(--border);border-radius:4px;background:var(--bar);overflow:hidden}
+.search-row:focus-within{border-color:var(--accent)}
+.search-row input{flex:1;height:38px;padding:0 14px;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;min-width:0}
+.search-row button{width:48px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:11px}
+html body.dark .search-row button{color:#0A0A0C}
+.weather-row{display:flex;justify-content:space-between;padding:10px 12px;background:var(--bar);border:1px solid var(--border);border-radius:6px;color:var(--text);margin-bottom:10px}
+.weather-temp{font-size:22px}.weather-time{font-size:13px;color:var(--text-dim)}
+.bookmarks-bar{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:var(--bar);border:1px solid var(--border);border-radius:6px;margin-bottom:10px}
+.bookmarks-bar .bm-item{padding:4px 10px;background:var(--btn);border-radius:4px;font-size:11px;color:var(--text);cursor:pointer;white-space:nowrap}
+.bookmarks-bar .bm-item:hover{background:var(--accent-dim);color:var(--accent)}
+.panel{max-width:700px;margin:0 auto}
+.panel h2{color:var(--text);margin-bottom:10px;font-size:15px;font-weight:600}
+.list-item{padding:8px 0;color:var(--text);border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;display:flex;justify-content:space-between}
+.list-item small{display:block;color:var(--text-dim);font-size:9px;margin-top:2px}
+.btn{padding:5px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;margin-right:4px;margin-bottom:6px}
+html body.dark .btn{color:#0A0A0C}
+.btn-gray{padding:5px 10px;background:var(--btn);color:var(--text);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:10px;margin-right:4px}
+.btn-red{padding:5px 10px;background:var(--warn);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px}
+.form-input{width:100%;padding:7px;margin-bottom:6px;background:var(--bar);color:var(--text);border:1px solid var(--border);border-radius:4px;font-size:11px}
+.settings-item{padding:10px 0;color:var(--text);display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px}
+.settings-toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.settings-toggle span{color:var(--text);font-size:12px}
+.settings-toggle .toggle-track{width:40px;height:22px;background:var(--btn);border-radius:12px;cursor:pointer;position:relative;transition:.2s;border:1px solid var(--border);flex-shrink:0}
+.settings-toggle .toggle-track.active{background:var(--accent);border-color:var(--accent)}
+.settings-toggle .toggle-thumb{width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}
+.settings-toggle .toggle-track.active .toggle-thumb{left:20px}
+.settings-section{margin:18px 0}
+.settings-section h3{color:var(--text);font-size:13px;margin-bottom:8px}
+.settings-note{font-size:10px;line-height:1.5;color:var(--text-dim);margin:4px 0 10px}
+.proxy-chip{display:inline-block;padding:3px 7px;border-radius:999px;font-size:9px;background:var(--btn);color:var(--text-dim);border:1px solid var(--border)}
+.proxy-chip.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.about-section{text-align:center;padding:14px;color:var(--text)}
+.about-section p{color:var(--text-dim);font-size:12px;margin:4px 0}
+.toast{position:fixed;bottom:40px;right:10px;background:var(--bar);color:var(--text);padding:7px 12px;border-radius:4px;border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:99999;font-size:10px;animation:fadeOut .3s ease 2s forwards}
+@keyframes fadeOut{0%{opacity:1}100%{opacity:0}}
+.status{height:2px;background:var(--accent);width:0}
+.status.loading{width:100%;animation:load 1.5s infinite}
+@keyframes load{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}
+.error-page{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text);padding:20px;text-align:center}
+.error-page h2{font-size:18px;font-weight:600;margin-bottom:10px}
+.error-page p{font-size:13px;color:var(--text-dim);margin-bottom:15px;max-width:560px}
+.converter-container{max-width:700px;margin:0 auto;padding:10px 0}
+.converter-container textarea{width:100%;height:300px;padding:12px;border:1px solid var(--border);border-radius:6px;font-family:monospace;font-size:13px;background:var(--bg);color:var(--text);resize:vertical}
+.converter-container textarea:focus{outline:none;border-color:var(--accent)}
+.converter-container .ext-btn{padding:4px 12px;border:1px solid var(--border);border-radius:4px;background:var(--btn);color:var(--text);cursor:pointer;font-size:11px;margin:2px}
+.converter-container .ext-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+html body.dark .converter-container .ext-btn.active{color:#0A0A0C}
+.converter-container .conv-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.converter-container .conv-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:4px;background:var(--btn);color:var(--text);font-size:12px;min-width:100px}
+.converter-container .conv-row input:focus{outline:none;border-color:var(--accent)}
+.converter-container .conv-btn{padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+.converter-container .conv-btn.download{background:var(--accent);color:#fff}
+html body.dark .converter-container .conv-btn.download{color:#0A0A0C}
+.converter-container .conv-btn.open,.converter-container .conv-btn.copy{background:var(--btn);color:var(--text);border:1px solid var(--border)}
+.converter-container .conv-btn.clear{background:var(--warn);color:#fff}
+.converter-container .conv-status{font-size:12px;color:var(--text-dim);margin-top:6px}
+@media(max-width:560px){
+  .topbar .hide-mobile{display:none}
+  .url-wrapper select{max-width:78px}
+}
+</style>
+</head>
+<body>
+<div class="tabs" id="tabsBar"><button class="newtab-btn" id="newTabBtn">+</button></div>
+<div class="topbar">
+  <button id="backBtn" title="Back">&#8592;</button>
+  <button id="forwardBtn" title="Forward">&#8594;</button>
+  <button id="refreshBtn" title="Refresh">&#8635;</button>
+  <button id="bookmarkBtn" class="star-btn" title="Bookmark this page">☆</button>
+  <div class="url-wrapper">
+    <select id="engineSelect" title="Search engine">
+      <option value="google">Google</option>
+      <option value="bing">Bing</option>
+      <option value="duckduckgo">DuckDuckGo</option>
+      <option value="yandex">Yandex</option>
+      <option value="startpage">Startpage</option>
+    </select>
+    <input id="urlInput" placeholder="Search or enter URL">
+  </div>
+  <div class="right-btns">
+    <button id="themeToggleBtn" class="theme-btn" title="Toggle theme">&#9788;</button>
+    <button id="homeBtn" title="Home">&#8962;</button>
+    <button id="menuBtn" title="Menu">&#9776;</button>
+  </div>
+  <div class="menu" id="menuDropdown"></div>
+</div>
+<div class="status" id="statusBar"></div>
+<div class="container" id="mainContainer"></div>
+
+<script>
+(function(){
+'use strict';
+
+var T={
+  title:'Portable Browser',newTab:'New Tab',bookmarks:'Bookmarks',history:'History',zoom:'Zoom',
+  darkMode:'Dark Mode',settings:'Settings',clearData:'Clear All Data',on:'ON',off:'OFF',
+  search:'Search or enter URL',go:'Go',noBookmarks:'No bookmarks',delete:'Delete',
+  noHistory:'No history',clearHistory:'Clear History',historyCleared:'History cleared',
+  bookmarkAdded:'Bookmark added',bookmarkRemoved:'Bookmark removed',about:'About',
+  aboutTitle:'Portable Browser',aboutVersion:'v3.2',
+  aboutInfo:'Single-file HTML browser shell with flexible proxy-pattern routing.',
+  name:'Name',loading:'Loading...',errorLoading:'This page can’t be displayed here',
+  retry:'Retry',httpsAuto:'Auto-add HTTPS',converter:'Code Converter',
+  proxySettings:'Proxy & Compatibility',proxyEnabled:'Use custom proxy',
+  proxyMode:'Proxy mode',proxyTemplate:'Proxy URL template',proxyFallbacks:'Proxy fallbacks',
+  userAgent:'User-Agent profile',uaCustom:'Custom User-Agent',testProxy:'Test proxy',
+  clearProxy:'Clear proxy',save:'Save',direct:'Direct',proxyOnly:'Proxy only',
+  autoFallback:'Auto / fallback',enabled:'Enabled',disabled:'Disabled'
+};
+function t(k){return T[k]||k}
+function toast(m){var d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},2500)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fixUrl(u){
+  u=(u||'').trim();
+  return u;
+}
+
+var proxyConfig={
+  enabled:localStorage.getItem('proxyEnabled')==='true',
+  mode:localStorage.getItem('proxyMode')||'auto',
+  template:localStorage.getItem('proxyTemplate')||'',
+  fallbacks:JSON.parse(localStorage.getItem('proxyFallbacks')||'[]'),
+  ua:localStorage.getItem('proxyUA')||'desktop',
+  customUA:localStorage.getItem('customUA')||''
+};
+
+var UA_PROFILES={
+  desktop:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  firefox:'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
+  mac:'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15',
+  android:'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+  iphone:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1'
+};
+
+var tabs=[],activeId=null,hist={},histPos={},closedTabs=[];
+var visits=JSON.parse(localStorage.getItem('visits')||'[]');
+var bookmarks=JSON.parse(localStorage.getItem('bookmarks')||'[]');
+var zoom=parseFloat(localStorage.getItem('zoom')||'1');
+var isDark=localStorage.getItem('darkMode')==='true';
+var httpsAuto=localStorage.getItem('httpsAuto')!=='false';
+if(isDark)document.body.classList.add('dark');
+
+var engines={
+  google:'https://www.google.com/search?q=',
+  bing:'https://www.bing.com/search?q=',
+  duckduckgo:'https://duckduckgo.com/?q=',
+  yandex:'https://yandex.com/search/?text=',
+  startpage:'https://www.startpage.com/search?q='
+};
+var eNames={google:'Google',bing:'Bing',duckduckgo:'DuckDuckGo',yandex:'Yandex',startpage:'Startpage'};
+
+function ensureHttps(url){
+  if(!httpsAuto||!url)return url;
+  url=url.trim();
+  if(url.startsWith('portable://'))return url;
+  if(/^https?:\/\//i.test(url))return url;
+  if(url.includes('.')&&!url.includes(' '))return 'https://'+url;
+  return url;
+}
+
+function addToHistory(url,title){
+  if(!url)return;
+  if(visits[0]&&visits[0].url===url)return;
+  var label=title||url.replace(/^https?:\/\//,'').substring(0,30);
+  visits.unshift({url:url,title:label,time:new Date().toLocaleString()});
+  if(visits.length>100)visits.pop();
+  localStorage.setItem('visits',JSON.stringify(visits));
+}
+function isBookmarked(url){return bookmarks.some(function(b){return b.url===url})}
+function toggleBookmark(url,title){
+  if(!url||url.startsWith('portable://'))return;
+  var idx=bookmarks.findIndex(function(b){return b.url===url});
+  if(idx>-1){
+    bookmarks.splice(idx,1);localStorage.setItem('bookmarks',JSON.stringify(bookmarks));
+    updateStarButton(url);renderBookmarksBar();toast(t('bookmarkRemoved'));return;
+  }
+  var name=prompt(t('name')+':',title||url.replace(/^https?:\/\//,'').substring(0,30));
+  if(name){
+    bookmarks.push({name:name,url:url});
+    localStorage.setItem('bookmarks',JSON.stringify(bookmarks));
+    updateStarButton(url);renderBookmarksBar();toast(t('bookmarkAdded'));
+  }
+}
+function updateStarButton(url){
+  var btn=document.getElementById('bookmarkBtn');
+  if(!url)url=getCurrentUrl();
+  var active=!!(url&&isBookmarked(url));
+  btn.textContent=active?'★':'☆';btn.classList.toggle('active',active);
+}
+function getCurrentUrl(){var tab=tabs.find(function(x){return x.id===activeId});return tab?tab.url:null}
+function renderBookmarksBar(){
+  document.querySelectorAll('.bookmarks-bar').forEach(function(bar){
+    bar.innerHTML='';
+    bookmarks.forEach(function(b){
+      var el=document.createElement('span');el.className='bm-item';el.textContent=b.name;
+      el.onclick=function(){navigate(b.url)};bar.appendChild(el);
+    });
+  });
+}
+
+function currentUA(){
+  if(proxyConfig.ua==='custom')return proxyConfig.customUA||UA_PROFILES.desktop;
+  return UA_PROFILES[proxyConfig.ua]||UA_PROFILES.desktop;
+}
+
+function splitFallbacks(){
+  return proxyConfig.fallbacks.filter(function(x){return typeof x==='string'&&x.trim()})
+    .map(function(x){return x.trim()});
+}
+
+function expandProxyTemplate(template,targetUrl){
+  if(!template)return null;
+  template=String(template).trim();
+  if(!template)return null;
+
+  var encoded=encodeURIComponent(targetUrl), raw=targetUrl;
+  var ua=encodeURIComponent(currentUA()), b64='';
+  try{b64=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}catch(e){}
+
+  var out=template
+    .replace(/<link:encoded>/gi,encoded)
+    .replace(/<link:base64>/gi,b64)
+    .replace(/<link>/gi,raw)
+    .replace(/\{\{url\}\}/g,encoded)
+    .replace(/\{\{urlRaw\}\}/g,raw)
+    .replace(/\{\{ua\}\}/g,ua)
+    .replace(/\{\{userAgent\}\}/g,ua);
+
+  var hasPlaceholder=/<link(?::(?:encoded|base64))?>|\{\{(?:url|urlRaw|ua|userAgent)\}\}/i.test(template);
+  if(!hasPlaceholder){
+    var sep=/[?&=\/]$/.test(out)?'':'/';
+    out+=sep+encoded;
+  }
+  if(out.indexOf('{{')!==-1 || /<link(?::(?:encoded|base64))?>/i.test(out))return null;
+  return out;
+}
+
+function buildProxyCandidates(targetUrl){
+  var list=[];
+  if(proxyConfig.template){
+    var one=expandProxyTemplate(proxyConfig.template,targetUrl);if(one)list.push(one);
+  }
+  splitFallbacks().forEach(function(tpl){
+    var u=expandProxyTemplate(tpl,targetUrl);if(u&&!list.includes(u))list.push(u);
+  });
+  return list;
+}
+
+function proxyConfigured(){return !!(proxyConfig.enabled&&buildProxyCandidates('https://example.com').length)}
+function saveProxyConfig(){
+  localStorage.setItem('proxyEnabled',String(proxyConfig.enabled));
+  localStorage.setItem('proxyMode',proxyConfig.mode);
+  localStorage.setItem('proxyTemplate',proxyConfig.template);
+  localStorage.setItem('proxyFallbacks',JSON.stringify(proxyConfig.fallbacks));
+  localStorage.setItem('proxyUA',proxyConfig.ua);
+  localStorage.setItem('customUA',proxyConfig.customUA);
+}
+function directAllowed(){return proxyConfig.mode!=='proxy'}
+function proxyAllowed(){return proxyConfig.enabled&&proxyConfigured()}
+
+function buildMenu(){
+  var m=document.getElementById('menuDropdown');m.innerHTML='';
+  var items=[
+    {t:t('newTab'),a:function(){newTab()}},{div:true},
+    {t:t('bookmarks'),a:function(){openPage('portable://bookmarks')}},
+    {t:t('history'),a:function(){openPage('portable://history')}},
+    {t:t('converter'),a:function(){openPage('portable://converter')}},
+    {t:t('settings'),a:function(){openPage('portable://settings')}},
+    {div:true},
+    {t:t('zoom')+': '+Math.round(zoom*100)+'%',a:function(){var z=prompt(t('zoom')+' (25-300):',Math.round(zoom*100));if(z){zoom=Math.max(25,Math.min(300,parseInt(z)||100))/100;localStorage.setItem('zoom',zoom);buildMenu()}}},
+    {div:true},
+    {t:t('darkMode')+': '+(isDark?t('on'):t('off')),a:function(){toggleTheme()}},
+    {t:t('clearData'),a:function(){if(confirm(t('clearData')+'?')){localStorage.clear();location.reload()}}}
+  ];
+  items.forEach(function(i){
+    if(i.div){var d=document.createElement('div');d.className='menu-divider';m.appendChild(d)}
+    else{var e=document.createElement('div');e.className='menu-item';e.textContent=i.t;e.onclick=function(){i.a();closeMenu()};m.appendChild(e)}
+  });
+}
+function toggleMenu(){
+  var menu=document.getElementById('menuDropdown'),show=!menu.classList.contains('show');
+  if(show){var r=document.querySelector('.topbar').getBoundingClientRect();menu.style.top=(r.bottom+4)+'px'}
+  menu.classList.toggle('show');
+}
+function closeMenu(){document.getElementById('menuDropdown').classList.remove('show')}
+function updateThemeIcon(){document.getElementById('themeToggleBtn').innerHTML=isDark?'&#9789;':'&#9788;'}
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('dark',isDark);localStorage.setItem('darkMode',isDark);buildMenu();updateThemeIcon()}
+
+function createContainer(id){var c=document.createElement('div');c.id='rc_'+id;c.className='render-container';return c}
+
+function newTab(url){
+  url=fixUrl(url||'portable://home');
+  if(url.startsWith('portable://')){openPage(url);return}
+  url=ensureHttps(url);
+  var fullUrl=getFullUrl(url),id='t'+Date.now()+Math.random().toString(36).slice(2,6),c=createContainer(id);
+  document.getElementById('mainContainer').appendChild(c);
+  tabs.push({id:id,url:fullUrl,title:fullUrl.replace(/^https?:\/\//,'').substring(0,18)||t('loading'),container:c,div:null,isDawn:false,iframe:null});
+  hist[id]=[fullUrl];histPos[id]=0;renderTabs();setActive(id);loadUrl(id,fullUrl);
+}
+function getFullUrl(url){
+  if(/^https?:\/\//i.test(url))return url;
+  if(url.includes('.'))return 'https://'+url;
+  var e=document.getElementById('engineSelect').value;
+  return engines[e]+encodeURIComponent(url);
+}
+
+function setIframeSource(iframe,targetUrl,onAttempt,onFinished){
+  var candidates=[];
+  if(proxyAllowed())buildProxyCandidates(targetUrl).forEach(function(x){candidates.push({src:x,kind:'proxy'})});
+  if(directAllowed())candidates.push({src:targetUrl,kind:'direct'});
+  if(!candidates.length){onAttempt(null,false);if(onFinished)onFinished(false);return}
+
+  var index=0,done=false,timer=null;
+  function stop(){if(timer){clearTimeout(timer);timer=null}}
+  function finish(ok){if(done)return;done=true;stop();iframe.onload=null;iframe.onerror=null;if(onFinished)onFinished(ok)}
+  function attempt(){
+    if(done)return;
+    if(index>=candidates.length){finish(false);return}
+    var item=candidates[index++];
+    onAttempt(item,index<candidates.length);
+    iframe.onload=function(){stop();finish(true)};
+    iframe.onerror=function(){stop();attempt()};
+    iframe.src=item.src;
+    timer=setTimeout(function(){
+      if(done)return;
+      if(index<candidates.length)attempt(); else finish(false);
+    },7000);
+  }
+  attempt();
+}
+
+function loadUrl(id,url){
+  var tab=tabs.find(function(x){return x.id===id});if(!tab)return;
+  var targetUrl=url;
+  if(tab.url===targetUrl&&tab.iframe){tab.iframe.src=tab.iframe.src;return}
+
+  var currentPos=histPos[id]||0,h=hist[id]||[];
+  if(h[currentPos]!==targetUrl){
+    if(currentPos<h.length-1)h=h.slice(0,currentPos+1);
+    h.push(targetUrl);hist[id]=h;histPos[id]=h.length-1;
+  }
+
+  if(tab.div){try{tab.div.remove()}catch(e){}tab.div=null;tab.isDawn=false}
+  if(!tab.container){tab.container=createContainer(id);document.getElementById('mainContainer').appendChild(tab.container)}
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');p.style.display='none'});
+  document.getElementById('statusBar').classList.add('loading');
+
+  tab.url=targetUrl;tab.title=targetUrl.replace(/^https?:\/\//,'').substring(0,18);
+  document.getElementById('urlInput').value=targetUrl;updateNavButtons(id);updateStarButton(targetUrl);
+  if(!targetUrl.startsWith('portable://'))addToHistory(targetUrl,tab.title);
+
+  tab.container.innerHTML='';
+  tab.container.style.display='block';tab.container.className='render-container active';
+
+  var iframe=document.createElement('iframe');
+  iframe.sandbox='allow-forms allow-modals allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation';
+  iframe.referrerPolicy='no-referrer-when-downgrade';
+  iframe.style.width='100%';iframe.style.height='100%';iframe.style.border='none';iframe.style.display='block';
+  tab.container.appendChild(iframe);
+  tab.iframe=iframe;tab._iframe=iframe;tab._directMode=!proxyAllowed();
+
+  var attempts=[];
+  function updateRoute(item,hasMore){
+    if(item){
+      attempts.push(item.kind+': '+item.src);
+      tab._route=item.kind;
+      tab._attempts=attempts.slice();
+      if(item.kind==='proxy')toast('Loading through custom proxy');
+    }
+    document.getElementById('statusBar').classList.toggle('loading',!!hasMore);
+  }
+
+  var finished=false;
+  setIframeSource(
+    iframe,
+    targetUrl,
+    function(item,hasMore){updateRoute(item,hasMore)},
+    function(ok){
+      if(finished)return;
+      finished=true;
+      document.getElementById('statusBar').classList.remove('loading');
+      if(!ok){showError(id,targetUrl,attempts);return}
+      try{
+        var doc=iframe.contentDocument,title=doc&&doc.title;
+        if(title){tab.title=title.substring(0,30);renderTabs()}
+      }catch(e){}
+      renderTabs();
+    }
+  );
+}
+
+function showError(id,url,attempts){
+  var tab=tabs.find(function(x){return x.id===id});if(!tab||!tab.container)return;
+  var route=tab._route||'unknown';
+  tab.container.innerHTML=
+    '<div class="error-page">'+
+    '<h2>'+esc(t('errorLoading'))+'</h2>'+
+    '<p>The target site may reject iframe embedding through X-Frame-Options/CSP, may require cookies or browser APIs that an iframe shell cannot reproduce, or your proxy may not be rewriting the response for embedding.</p>'+
+    '<p style="font-size:11px;opacity:.6;margin:10px 0;word-break:break-all">'+esc(url)+'</p>'+
+    '<p style="font-size:10px;opacity:.55;margin-bottom:10px">Last route: '+esc(route)+'</p>'+
+    '<button class="btn" onclick="window.retryLoad(\''+esc(id)+'\')">'+esc(t('retry'))+'</button>'+
+    '<button class="btn-gray" onclick="window.open(\''+encodeURIComponent(url)+'\',\'_blank\')">Open direct in new tab</button>'+
+    '</div>';
+  if(attempts&&attempts.length){
+    var p=document.createElement('p');p.style.fontSize='10px';p.style.opacity='.45';p.textContent='Attempted: '+attempts.join(' | ');
+    tab.container.querySelector('.error-page').appendChild(p);
+  }
+}
+window.retryLoad=function(id){
+  var tab=tabs.find(function(x){return x.id===id});if(tab)loadUrl(id,tab.url);
+};
+
+function openPage(url,tabId){
+  url=fixUrl(url);
+  if(tabId){
+    var existing=tabs.find(function(x){return x.id===tabId});
+    if(existing){
+      if(existing.url===url){setActive(existing.id);return}
+      if(existing.container){try{existing.container.remove()}catch(e){}existing.container=null}
+      if(existing.div){try{existing.div.remove()}catch(e){}existing.div=null}
+      var div=document.createElement('div');div.className='page';div.id='pg_'+existing.id;
+      document.getElementById('mainContainer').appendChild(div);
+      existing.div=div;existing.isDawn=true;existing.url=url;existing.title=url.split('://')[1]||'home';
+      var h=hist[existing.id]||[],pos=histPos[existing.id]||0;
+      if(h[pos]!==url){h.splice(pos+1,0,url);histPos[existing.id]=pos+1;hist[existing.id]=h}
+      renderInternal(existing,div);renderTabs();setActive(existing.id);return;
+    }
+  }
+  var exist=tabs.find(function(x){return x.url===url});if(exist){setActive(exist.id);return}
+  var id='t'+Date.now()+Math.random().toString(36).slice(2,6),div=document.createElement('div');
+  div.className='page';div.id='pg_'+id;document.getElementById('mainContainer').appendChild(div);
+  var c=createContainer(id);c.style.display='none';document.getElementById('mainContainer').appendChild(c);
+  var type=url.split('://')[1]||'home';
+  tabs.push({id:id,url:url,title:type==='home'?t('newTab'):type,container:c,div:div,isDawn:true,iframe:null});
+  hist[id]=[url];histPos[id]=0;renderTabs();setActive(id);renderInternal(tabs[tabs.length-1],div);
+}
+function renderInternal(tab,div){
+  var type=tab.url.split('://')[1]||'home';
+  if(type==='home')renderHome(tab.id);
+  else if(type==='bookmarks')renderBookmarks(tab.id);
+  else if(type==='history')renderHistory(tab.id);
+  else if(type==='settings')renderSettings(tab.id);
+  else if(type==='converter')renderConverter(tab.id);
+}
+
+function renderTabs(){
+  var bar=document.getElementById('tabsBar');bar.innerHTML='';
+  tabs.forEach(function(tab){
+    var e=document.createElement('div');e.className='tab'+(tab.id===activeId?' active':'');
+    var span=document.createElement('span');span.textContent=tab.title||t('newTab');e.appendChild(span);
+    var close=document.createElement('button');close.className='close';close.textContent='×';
+    close.onclick=function(ev){ev.stopPropagation();closeTab(tab.id)};e.appendChild(close);
+    e.onclick=function(){setActive(tab.id)};bar.appendChild(e);
+  });
+  var nb=document.createElement('button');nb.className='newtab-btn';nb.textContent='+';nb.onclick=function(){newTab()};bar.appendChild(nb);
+}
+function setActive(id){
+  document.querySelectorAll('.render-container').forEach(function(c){c.style.display='none';c.className='render-container'});
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');p.style.display='none'});
+  activeId=id;
+  var tab=tabs.find(function(x){return x.id===id});
+  if(tab){
+    if(tab.isDawn&&tab.div){tab.div.classList.add('active');tab.div.style.display='block';if(tab.container)tab.container.style.display='none';}
+    else if(tab.container){tab.container.style.display='block';tab.container.className='render-container active'}
+    document.getElementById('urlInput').value=tab.url;updateNavButtons(id);updateStarButton(tab.url);
+  }
+  renderTabs();
+}
+function updateNavButtons(id){
+  var h=hist[id]||[],p=histPos[id]||0;
+  document.getElementById('backBtn').disabled=p<=0;
+  document.getElementById('forwardBtn').disabled=p>=h.length-1;
+}
+function closeTab(id){
+  var idx=tabs.findIndex(function(x){return x.id===id});if(idx<0)return;
+  var tab=tabs[idx];closedTabs.push({url:tab.url,title:tab.title});if(closedTabs.length>20)closedTabs.shift();
+  if(tab.container)try{tab.container.remove()}catch(e){}
+  if(tab.div)try{tab.div.remove()}catch(e){}
+  tabs.splice(idx,1);delete hist[id];delete histPos[id];
+  if(!tabs.length){newTab('portable://home');return}
+  if(activeId===id)setActive(tabs[Math.max(0,idx-1)].id);else renderTabs();
+}
+function navigate(url){
+  if(!url)return;
+  url=fixUrl(url.trim());if(url.startsWith('portable://')){openPage(url);return}
+  url=ensureHttps(url);var full=getFullUrl(url),tab=tabs.find(function(x){return x.id===activeId});if(!tab)return;
+  if(tab.isDawn&&tab.div){try{tab.div.remove()}catch(e){}tab.div=null;tab.isDawn=false;if(!tab.container){tab.container=createContainer(tab.id);document.getElementById('mainContainer').appendChild(tab.container)}}
+  loadUrl(tab.id,full);
+}
+function goBack(){
+  var id=activeId;if(!id)return;var h=hist[id]||[],p=histPos[id]||0;if(p>0){p--;histPos[id]=p;var url=h[p];if(url&&url.startsWith('portable://'))openPage(url,id);else loadUrl(id,url)}
+}
+function goForward(){
+  var id=activeId;if(!id)return;var h=hist[id]||[],p=histPos[id]||0;if(p<h.length-1){p++;histPos[id]=p;var url=h[p];if(url&&url.startsWith('portable://'))openPage(url,id);else loadUrl(id,url)}
+}
+function refresh(){var tab=tabs.find(function(x){return x.id===activeId});if(tab&&!tab.isDawn)loadUrl(tab.id,tab.url)}
+
+function renderHome(id){
+  var div=document.getElementById('pg_'+id);if(!div)return;
+  var e=document.getElementById('engineSelect').value;
+  div.innerHTML=
+    '<div class="home-content"><div class="home-eyebrow">// new tab</div><div class="home-title">'+t('title')+'</div>'+
+    '<div class="search-row"><input id="hs_'+id+'" placeholder="'+esc(t('search')+' '+eNames[e])+'"><button id="hsbtn_'+id+'">'+t('go')+'</button></div>'+
+    '<div class="weather-row"><div><span class="weather-temp" id="temp_'+id+'">--°</span></div><div class="weather-time" id="time_'+id+'"></div></div>'+
+    '<div class="bookmarks-bar" id="bmbar_'+id+'"></div></div>';
+  document.getElementById('hs_'+id).onkeydown=function(ev){if(ev.key==='Enter')navigate(ev.target.value)};
+  document.getElementById('hsbtn_'+id).onclick=function(){navigate(document.getElementById('hs_'+id).value)};
+  renderBookmarksBar();updateTime(id);updateWeather(id);
+}
+function renderBookmarks(id){
+  var div=document.getElementById('pg_'+id);if(!div)return;
+  var h='<div class="panel"><h2>'+t('bookmarks')+'</h2>';
+  if(!bookmarks.length)h+='<div class="list-item">'+t('noBookmarks')+'</div>';
+  else bookmarks.forEach(function(b,i){h+='<div class="list-item" data-url="'+esc(b.url)+'"><span style="cursor:pointer;flex:1">'+esc(b.name)+'</span><button class="btn-red" data-idx="'+i+'">'+t('delete')+'</button></div>'});
+  h+='</div>';div.innerHTML=h;
+  div.querySelectorAll('.list-item[data-url]').forEach(function(el){el.onclick=function(){navigate(el.dataset.url)}});
+  div.querySelectorAll('.btn-red').forEach(function(btn){btn.onclick=function(ev){ev.stopPropagation();var i=parseInt(btn.dataset.idx);bookmarks.splice(i,1);localStorage.setItem('bookmarks',JSON.stringify(bookmarks));renderBookmarks(id);updateStarButton(getCurrentUrl());renderBookmarksBar()}});
+}
+function renderHistory(id){
+  var div=document.getElementById('pg_'+id);if(!div)return;
+  var h='<div class="panel"><h2>'+t('history')+'</h2><button class="btn-red" id="clrHist_'+id+'">'+t('clearHistory')+'</button>';
+  if(!visits.length)h+='<div class="list-item">'+t('noHistory')+'</div>';
+  else visits.forEach(function(v){h+='<div class="list-item" data-url="'+esc(v.url)+'"><span>'+esc(v.title)+'<small>'+esc(v.time)+'</small></span></div>'});
+  h+='</div>';div.innerHTML=h;
+  div.querySelectorAll('.list-item[data-url]').forEach(function(el){el.onclick=function(){navigate(el.dataset.url)}});
+  document.getElementById('clrHist_'+id).onclick=function(){if(confirm(t('clearHistory')+'?')){visits=[];localStorage.setItem('visits','[]');renderHistory(id);toast(t('historyCleared'))}};
+}
+
+function renderSettings(id){
+  var div=document.getElementById('pg_'+id);if(!div)return;
+
+  function toggleHtml(label,suffix,checked){
+    return '<div class="settings-toggle"><span>'+esc(label)+'</span><div class="toggle-track'+(checked?' active':'')+'" id="toggle_'+suffix+'_'+id+'"><div class="toggle-thumb"></div></div></div>';
+  }
+
+  var activeText=proxyConfig.enabled?(proxyConfigured()?'Configured':'Enabled but incomplete'):'Direct';
+  var routeMode=proxyConfig.mode==='proxy'?'Proxy only':proxyConfig.mode==='direct'?'Direct only':'Auto / fallback';
+
+  div.innerHTML=
+    '<div class="panel">'+
+    '<h2>'+t('settings')+'</h2>'+
+    toggleHtml(t('darkMode'),'dark',isDark)+
+    toggleHtml(t('httpsAuto'),'https',httpsAuto)+
+    '<div class="settings-item" id="setZoom_'+id+'">'+t('zoom')+'<span>'+Math.round(zoom*100)+'%</span></div>'+
+
+    '<div class="settings-section">'+
+      '<h3>'+t('proxySettings')+'</h3>'+
+      '<p class="settings-note">A single HTML file cannot change the browser’s real User-Agent header or turn off CORS/X-Frame-Options/CSP. The proxy must do the cross-origin request and, when necessary, rewrite/strip embedding restrictions.</p>'+
+      '<div style="margin-bottom:8px"><span class="proxy-chip '+(proxyConfig.enabled?'active':'')+'">'+esc(activeText)+'</span> <span class="proxy-chip">'+esc(routeMode)+'</span></div>'+
+      toggleHtml(t('proxyEnabled'),'proxy',proxyConfig.enabled)+
+      '<label style="display:block;color:var(--text);font-size:11px;margin:10px 0 4px">'+t('proxyMode')+'</label>'+
+      '<select class="form-input" id="proxyMode_'+id+'">'+
+        '<option value="auto">Auto / fallback</option>'+
+        '<option value="proxy">Proxy only</option>'+
+        '<option value="direct">Direct only</option>'+
+      '</select>'+
+      '<label style="display:block;color:var(--text);font-size:11px;margin:4px 0">'+t('proxyTemplate')+'</label>'+
+      '<input class="form-input" id="proxyTemplate_'+id+'" placeholder="https://proxy.example/<link>" value="'+esc(proxyConfig.template)+'">'+
+      '<p class="settings-note">Use <code>&lt;link&gt;</code> for the raw destination URL, <code>&lt;link:encoded&gt;</code> for a percent-encoded URL, or <code>&lt;link:base64&gt;</code> for URL-safe Base64. Example: <code>https://proxy.example/p/&lt;link&gt;</code>.</p>'+
+      '<label style="display:block;color:var(--text);font-size:11px;margin:4px 0">'+t('proxyFallbacks')+'</label>'+
+      '<textarea class="form-input" id="proxyFallbacks_'+id+'" style="height:70px;resize:vertical" placeholder="One proxy pattern per line (use &lt;link&gt;)">'+esc(splitFallbacks().join('\\n'))+'</textarea>'+
+      '<label style="display:block;color:var(--text);font-size:11px;margin:4px 0">'+t('userAgent')+'</label>'+
+      '<select class="form-input" id="proxyUA_'+id+'">'+
+        '<option value="desktop">Desktop Chrome</option>'+
+        '<option value="firefox">Desktop Firefox</option>'+
+        '<option value="mac">Safari / macOS</option>'+
+        '<option value="android">Android Chrome</option>'+
+        '<option value="iphone">iPhone Safari</option>'+
+        '<option value="custom">Custom</option>'+
+      '</select>'+
+      '<input class="form-input" id="customUA_'+id+'" placeholder="'+esc(t('uaCustom'))+'" value="'+esc(proxyConfig.customUA)+'">'+
+      '<div style="margin-top:8px"><button class="btn" id="saveProxy_'+id+'">'+t('save')+'</button><button class="btn-gray" id="testProxy_'+id+'">'+t('testProxy')+'</button><button class="btn-gray" id="clearProxy_'+id+'">'+t('clearProxy')+'</button></div>'+
+      '<div id="proxyStatus_'+id+'" class="settings-note" style="margin-top:6px"></div>'+
+    '</div>'+
+
+    '<div class="settings-section">'+
+      '<div class="settings-item" id="goBookmarks_'+id+'">'+t('bookmarks')+' →</div>'+
+      '<div class="settings-item" id="goHistory_'+id+'">'+t('history')+' →</div>'+
+      '<div class="settings-item" id="goConverter_'+id+'">'+t('converter')+' →</div>'+
+      '<div class="settings-item" id="setClearHist_'+id+'">'+t('clearHistory')+'</div>'+
+      '<div class="settings-item" id="setClearData_'+id+'">'+t('clearData')+'</div>'+
+      '<div class="settings-item" id="setAbout_'+id+'">'+t('about')+'</div>'+
+      '<div id="aboutArea_'+id+'"></div>'+
+    '</div>'+
+    '</div>';
+
+  document.getElementById('proxyMode_'+id).value=proxyConfig.mode;
+  document.getElementById('proxyUA_'+id).value=proxyConfig.ua;
+
+  document.getElementById('toggle_dark_'+id).onclick=function(){isDark=!isDark;document.body.classList.toggle('dark',isDark);localStorage.setItem('darkMode',isDark);renderSettings(id);buildMenu();updateThemeIcon()};
+  document.getElementById('toggle_https_'+id).onclick=function(){httpsAuto=!httpsAuto;localStorage.setItem('httpsAuto',httpsAuto);renderSettings(id)};
+  document.getElementById('toggle_proxy_'+id).onclick=function(){proxyConfig.enabled=!proxyConfig.enabled;saveProxyConfig();renderSettings(id);toast(proxyConfig.enabled?'Proxy enabled':'Proxy disabled')};
+
+  document.getElementById('setZoom_'+id).onclick=function(){var z=prompt(t('zoom')+' (25-300):',Math.round(zoom*100));if(z){zoom=Math.max(25,Math.min(300,parseInt(z)||100))/100;localStorage.setItem('zoom',zoom);renderSettings(id);buildMenu()}};
+  document.getElementById('saveProxy_'+id).onclick=function(){
+    proxyConfig.mode=document.getElementById('proxyMode_'+id).value;
+    proxyConfig.template=document.getElementById('proxyTemplate_'+id).value.trim();
+    proxyConfig.fallbacks=document.getElementById('proxyFallbacks_'+id).value.split(/\r?\n/).map(function(x){return x.trim()}).filter(Boolean);
+    proxyConfig.ua=document.getElementById('proxyUA_'+id).value;
+    proxyConfig.customUA=document.getElementById('customUA_'+id).value.trim();
+    saveProxyConfig();renderSettings(id);buildMenu();toast('Proxy settings saved');
+  };
+  document.getElementById('testProxy_'+id).onclick=function(){
+    var tpl=document.getElementById('proxyTemplate_'+id).value.trim();
+    var status=document.getElementById('proxyStatus_'+id);
+    if(!tpl){status.textContent='Add a proxy URL template first.';return}
+    var testUrl=expandProxyTemplate(tpl,'https://example.com/');
+    if(!testUrl){status.textContent='Template is invalid or contains an unsupported placeholder.';return}
+    status.textContent='Opening proxy test target...';
+    window.open(testUrl,'_blank','noopener');
+  };
+  document.getElementById('clearProxy_'+id).onclick=function(){
+    proxyConfig={enabled:false,mode:'auto',template:'',fallbacks:[],ua:'desktop',customUA:''};
+    saveProxyConfig();renderSettings(id);buildMenu();toast('Proxy settings cleared');
+  };
+  document.getElementById('goBookmarks_'+id).onclick=function(){openPage('portable://bookmarks')};
+  document.getElementById('goHistory_'+id).onclick=function(){openPage('portable://history')};
+  document.getElementById('goConverter_'+id).onclick=function(){openPage('portable://converter')};
+  document.getElementById('setClearHist_'+id).onclick=function(){if(confirm(t('clearHistory')+'?')){visits=[];localStorage.setItem('visits','[]');toast(t('historyCleared'))}};
+  document.getElementById('setClearData_'+id).onclick=function(){if(confirm(t('clearData')+'?')){localStorage.clear();location.reload()}};
+  document.getElementById('setAbout_'+id).onclick=function(){document.getElementById('aboutArea_'+id).innerHTML='<div class="about-section"><h3>'+t('aboutTitle')+'</h3><p>'+t('aboutVersion')+'</p><p>'+t('aboutInfo')+'</p></div>'};
+}
+
+function renderConverter(id){
+  var div=document.getElementById('pg_'+id);if(!div)return;
+  div.innerHTML='<div class="converter-container"><h2 style="color:var(--text);font-size:18px;margin-bottom:10px">'+t('converter')+'</h2><p style="color:var(--text);opacity:.6;font-size:13px;margin-bottom:10px">Paste code, choose extension, download or open.</p>'+
+  '<div class="conv-row"><span style="font-size:12px;color:var(--text);font-weight:600">Extension:</span>'+
+  '<button class="ext-btn active" data-ext="js">.js</button><button class="ext-btn" data-ext="html">.html</button><button class="ext-btn" data-ext="css">.css</button><button class="ext-btn" data-ext="py">.py</button><button class="ext-btn" data-ext="json">.json</button><button class="ext-btn" data-ext="txt">.txt</button><button class="ext-btn" data-ext="md">.md</button><button class="ext-btn" data-ext="xml">.xml</button>'+
+  '<input class="custom-ext" id="customExt_'+id+'" placeholder="other..." style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--btn);color:var(--text);font-size:11px;width:80px"></div>'+
+  '<div class="conv-row"><span style="font-size:12px;color:var(--text);font-weight:600">Filename:</span><input id="filenameInput_'+id+'" value="code" placeholder="Enter filename"><span style="font-size:12px;color:var(--text);opacity:.6;font-family:monospace" id="extPreview_'+id+'">.js</span></div>'+
+  '<textarea id="codeInput_'+id+'" placeholder="Paste your code here..." style="width:100%;height:250px;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:13px;background:var(--bg);color:var(--text);resize:vertical"></textarea>'+
+  '<div class="conv-row" style="margin-top:8px"><button class="conv-btn download" id="downloadBtn_'+id+'">Download</button><button class="conv-btn open" id="openBtn_'+id+'">Open</button><button class="conv-btn copy" id="copyBtn_'+id+'">Copy</button><button class="conv-btn clear" id="clearBtn_'+id+'">Clear</button></div>'+
+  '<div class="conv-status" id="convStatus_'+id+'"></div></div>';
+
+  var codeInput=document.getElementById('codeInput_'+id),filenameInput=document.getElementById('filenameInput_'+id),extPreview=document.getElementById('extPreview_'+id),customExt=document.getElementById('customExt_'+id);
+  var buttons=div.querySelectorAll('.ext-btn'),status=document.getElementById('convStatus_'+id),selectedExt='js',st;
+
+  function updatePreview(){extPreview.textContent='.'+selectedExt}
+  function getFilename(){var base=filenameInput.value.trim()||'code';return base.replace(/\.[^./\\]*$/,'')+'.'+selectedExt}
+  function mime(ext){var m={js:'text/javascript',html:'text/html',css:'text/css',json:'application/json',xml:'application/xml',md:'text/markdown',txt:'text/plain',py:'text/x-python'};return m[ext]||'text/plain'}
+  function setStatus(msg,type){status.textContent=msg;status.style.color=type==='error'?'#dc3545':type==='success'?'#27ae60':'var(--text)';clearTimeout(st);if(type!=='info')st=setTimeout(function(){status.textContent=''},4000)}
+  function hasCode(){if(!codeInput.value.trim()){setStatus('Please paste some code first.','error');return false}return true}
+  buttons.forEach(function(btn){btn.onclick=function(){buttons.forEach(function(b){b.classList.remove('active')});this.classList.add('active');selectedExt=this.dataset.ext;customExt.value='';updatePreview()}});
+  customExt.oninput=function(){if(this.value.trim()){buttons.forEach(function(b){b.classList.remove('active')});selectedExt=this.value.trim().replace(/^\./,'');updatePreview()}};
+  document.getElementById('downloadBtn_'+id).onclick=function(){if(!hasCode())return;var name=getFilename(),blob=new Blob([codeInput.value],{type:mime(selectedExt)+';charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},3000);setStatus('Downloading: '+name,'success')};
+  document.getElementById('openBtn_'+id).onclick=function(){if(!hasCode())return;var blob=new Blob([codeInput.value],{type:mime(selectedExt)+';charset=utf-8'}),u=URL.createObjectURL(blob);window.open(u,'_blank','noopener');setTimeout(function(){URL.revokeObjectURL(u)},3000);setStatus('Opened','info')};
+  document.getElementById('copyBtn_'+id).onclick=function(){var code=codeInput.value;if(!code.trim()){setStatus('Nothing to copy.','error');return}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(function(){setStatus('Copied!','success')}).catch(function(){codeInput.select();document.execCommand('copy');setStatus('Copied!','success')});else{codeInput.select();document.execCommand('copy');setStatus('Copied!','success')}};
+  document.getElementById('clearBtn_'+id).onclick=function(){codeInput.value='';setStatus('Cleared.','info')};
+  codeInput.onkeydown=function(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();document.getElementById('downloadBtn_'+id).click()}};
+  updatePreview();
+}
+
+function updateTime(id){var e=document.getElementById('time_'+id);if(e)e.textContent=new Date().toLocaleTimeString('en-US',{hour12:false})}
+function updateWeather(id){
+  var temp=document.getElementById('temp_'+id);if(!temp)return;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=35&longitude=105&current_weather=true')
+    .then(function(r){return r.json()}).then(function(d){if(d&&d.current_weather)temp.textContent=d.current_weather.temperature+'°C'})
+    .catch(function(){temp.textContent='22°C'});
+}
+
+document.getElementById('bookmarkBtn').onclick=function(){
+  var url=getCurrentUrl(),tab=tabs.find(function(x){return x.id===activeId});
+  if(url&&!url.startsWith('portable://'))toggleBookmark(url,tab?tab.title:'');else toast('Cannot bookmark this page');
+};
+document.getElementById('backBtn').onclick=goBack;
+document.getElementById('forwardBtn').onclick=goForward;
+document.getElementById('refreshBtn').onclick=refresh;
+document.getElementById('homeBtn').onclick=function(){newTab('portable://home')};
+document.getElementById('newTabBtn').onclick=function(){newTab()};
+document.getElementById('urlInput').onkeydown=function(e){if(e.key==='Enter')navigate(e.target.value)};
+document.getElementById('engineSelect').onchange=function(){var tab=tabs.find(function(x){return x.id===activeId});if(tab&&tab.isDawn&&tab.url==='portable://home')renderHome(tab.id)};
+document.getElementById('menuBtn').onclick=function(e){e.stopPropagation();toggleMenu()};
+document.getElementById('themeToggleBtn').onclick=function(){toggleTheme()};
+document.addEventListener('click',function(e){if(!e.target.closest('.right-btns')&&!e.target.closest('.menu'))closeMenu()});
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.key==='t'){e.preventDefault();newTab()}
+  if(e.ctrlKey&&e.shiftKey&&e.key==='T'){e.preventDefault();if(closedTabs.length)newTab(closedTabs.pop().url)}
+});
+
+updateThemeIcon();buildMenu();newTab('portable://home');
+setInterval(function(){var tab=tabs.find(function(x){return x.id===activeId});if(tab&&tab.isDawn&&tab.url==='portable://home'){updateTime(tab.id);updateWeather(tab.id)}},1000);
+})();
+</script>
+</body>
+</html>
