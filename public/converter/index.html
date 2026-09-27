@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Code to File Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            width: 100dvw;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 20px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            color: #1a1a1a;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #777;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 16px 20px;
+            gap: 10px;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .toolbar-label {
+            font-weight: 600;
+            color: #444;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            width: 100%;
+            margin-bottom: 2px;
+        }
+
+        .extension-selector {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .ext-btn {
+            padding: 7px 13px;
+            border: 1.5px solid #d0d0d0;
+            border-radius: 6px;
+            background: #ffffff;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: all 0.15s ease;
+            color: #555;
+            white-space: nowrap;
+            -webkit-appearance: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .ext-btn.active {
+            background: #1a1a1a;
+            color: #ffffff;
+            border-color: #1a1a1a;
+        }
+
+        .custom-ext {
+            padding: 7px 12px;
+            border: 1.5px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            width: 140px;
+            transition: border-color 0.15s;
+            background: #ffffff;
+            color: #333;
+            -webkit-appearance: none;
+        }
+
+        .custom-ext:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .custom-ext::placeholder {
+            color: #aaa;
+            font-size: 0.75rem;
+        }
+
+        .filename-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .filename-label {
+            font-weight: 600;
+            color: #444;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .filename-input {
+            flex: 1;
+            padding: 7px 12px;
+            border: 1.5px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: #ffffff;
+            color: #333;
+            -webkit-appearance: none;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+        }
+
+        .filename-input:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 120px;
+            max-height: 45vh;
+            max-height: 45dvh;
+        }
+
+        .editor-label {
+            font-weight: 600;
+            color: #444;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            padding: 14px;
+            border: 1.5px solid #d0d0d0;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            resize: none;
+            background: #fafafa;
+            color: #1a1a1a;
+            transition: border-color 0.15s, background 0.15s;
+            min-height: 0;
+            -webkit-appearance: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #1a1a1a;
+            background: #ffffff;
+        }
+
+        textarea::placeholder {
+            color: #bbb;
+        }
+
+        .footer {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            -webkit-appearance: none;
+            user-select: none;
+            -webkit-user-select: none;
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .btn-download {
+            background: #1a1a1a;
+            color: #ffffff;
+            flex: 1.5;
+        }
+
+        .btn-download:active {
+            background: #000000;
+        }
+
+        .btn-open {
+            background: #2c6bae;
+            color: #ffffff;
+            flex: 1.5;
+        }
+
+        .btn-open:active {
+            background: #1d4f85;
+        }
+
+        .btn-copy {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-copy:active {
+            background: #d5d5d5;
+        }
+
+        .btn-clear {
+            background: #ffffff;
+            color: #c0392b;
+            border: 1.5px solid #c0392b;
+        }
+
+        .btn-clear:active {
+            background: #c0392b;
+            color: #ffffff;
+        }
+
+        .status {
+            width: 100%;
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
+            text-align: center;
+            min-height: 20px;
+            flex-shrink: 0;
+        }
+
+        .status.success { color: #27ae60; }
+        .status.error { color: #c0392b; }
+        .status.info { color: #2980b9; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 28px 24px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal h2 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .modal p {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .modal .filename-display {
+            background: #f5f5f5;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            word-break: break-all;
+        }
+
+        .modal .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .modal .btn-save {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #2c6bae;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .modal .btn-save:active {
+            background: #1d4f85;
+        }
+
+        .modal .btn-close {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #f0f0f0;
+            color: #555;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .modal .divider {
+            color: #999;
+            font-size: 0.8rem;
+            margin: 4px 0;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 12px 16px; }
+            .main-content { padding: 12px 16px; gap: 8px; }
+            h1 { font-size: 1.2rem; }
+            .toolbar { gap: 5px; }
+            .ext-btn { padding: 6px 10px; font-size: 0.75rem; }
+            .btn { padding: 10px 10px; font-size: 0.78rem; }
+            textarea { font-size: 0.8rem; padding: 10px; }
+            .filename-input { font-size: 0.75rem; }
+            .editor-area { max-height: 40vh; max-height: 40dvh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Code to File Converter</h1>
+        <p class="subtitle">Paste code, choose name, download or open</p>
+    </div>
+
+    <div class="main-content">
+        <div class="toolbar">
+            <span class="toolbar-label">Extension:</span>
+            <div class="extension-selector" id="extensionSelector">
+                <button class="ext-btn active" data-ext="js">.js</button>
+                <button class="ext-btn" data-ext="html">.html</button>
+                <button class="ext-btn" data-ext="css">.css</button>
+                <button class="ext-btn" data-ext="py">.py</button>
+                <button class="ext-btn" data-ext="json">.json</button>
+                <button class="ext-btn" data-ext="txt">.txt</button>
+                <button class="ext-btn" data-ext="md">.md</button>
+                <button class="ext-btn" data-ext="xml">.xml</button>
+            </div>
+            <input type="text" class="custom-ext" id="customExt" placeholder="other..." />
+        </div>
+
+        <div class="filename-row">
+            <span class="filename-label">Filename:</span>
+            <input type="text" class="filename-input" id="filenameInput" value="code" placeholder="Enter filename" />
+            <span style="color:#999;font-size:0.85rem;font-family:monospace;" id="extPreview">.js</span>
+        </div>
+
+        <div class="editor-area">
+            <span class="editor-label">Code:</span>
+            <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
+        </div>
+
+        <div class="footer">
+            <button class="btn btn-download" id="downloadBtn">Download</button>
+            <button class="btn btn-open" id="openBtn">Open & Save</button>
+            <button class="btn btn-copy" id="copyBtn">Copy</button>
+            <button class="btn btn-clear" id="clearBtn">Clear</button>
+        </div>
+        <div class="status" id="status"></div>
+    </div>
+
+    <div class="modal-overlay" id="saveModal">
+        <div class="modal">
+            <h2>Save Your File</h2>
+            <p>Your code is ready to open as:</p>
+            <div class="filename-display" id="modalFilename">code.js</div>
+            <div class="btn-group">
+                <a class="btn-save" id="openCodeLink" href="#" target="_blank">Open Code in New Tab</a>
+                <span class="divider">Then use browser menu to save</span>
+                <button class="btn-close" id="closeModal">Cancel</button>
+            </div>
+            <p style="font-size:0.75rem;color:#999;margin-top:12px;">
+                In the new tab: tap menu (three dots) &rarr; "Save page" or "Share" &rarr; "Save to files"
+            </p>
+        </div>
+    </div>
+
+    <iframe id="downloadFrame" sandbox="allow-scripts allow-same-origin allow-downloads" style="display:none;width:0;height:0;border:none;"></iframe>
+
+    <script>
+        (function() {
+            // DOM references
+            const codeInput = document.getElementById('codeInput');
+            const filenameInput = document.getElementById('filenameInput');
+            const extPreview = document.getElementById('extPreview');
+            const customExt = document.getElementById('customExt');
+            const extButtons = document.querySelectorAll('.ext-btn');
+            const statusEl = document.getElementById('status');
+            const downloadFrame = document.getElementById('downloadFrame');
+            
+            // Modal elements
+            const saveModal = document.getElementById('saveModal');
+            const modalFilename = document.getElementById('modalFilename');
+            const openCodeLink = document.getElementById('openCodeLink');
+            const closeModal = document.getElementById('closeModal');
+
+            // State
+            let selectedExt = 'js';
+            let statusTimeout;
+
+            // Helper: Update preview
+            function updatePreview() {
+                extPreview.textContent = '.' + selectedExt;
+            }
+
+            // Helper: Get full filename
+            function getFilename() {
+                const base = filenameInput.value.trim() || 'code';
+                return base.replace(/\.[^./\\]*$/, '') + '.' + selectedExt;
+            }
+
+            // Helper: Get MIME type
+            function getMimeType(ext) {
+                const types = {
+                    js: 'text/javascript', html: 'text/html', css: 'text/css',
+                    json: 'application/json', xml: 'application/xml',
+                    md: 'text/markdown', txt: 'text/plain', py: 'text/x-python'
+                };
+                return types[ext] || 'text/plain';
+            }
+
+            // Helper: Show status message
+            function setStatus(msg, type) {
+                statusEl.textContent = msg;
+                statusEl.className = 'status' + (type ? ' ' + type : '');
+                clearTimeout(statusTimeout);
+                if (type !== 'info') {
+                    statusTimeout = setTimeout(() => {
+                        statusEl.textContent = '';
+                        statusEl.className = 'status';
+                    }, 4000);
+                }
+            }
+
+            // Helper: Validate code is present
+            function hasCode() {
+                if (!codeInput.value.trim()) {
+                    setStatus('Please paste some code first.', 'error');
+                    return false;
+                }
+                return true;
+            }
+
+            // Helper: Create blob URL from code
+            function createFileUrl() {
+                const blob = new Blob([codeInput.value], {
+                    type: getMimeType(selectedExt) + ';charset=utf-8'
+                });
+                return URL.createObjectURL(blob);
+            }
+
+            // Extension button clicks
+            extButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    extButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedExt = this.dataset.ext;
+                    customExt.value = '';
+                    updatePreview();
+                });
+            });
+
+            // Custom extension input
+            customExt.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    extButtons.forEach(b => b.classList.remove('active'));
+                    selectedExt = this.value.trim().replace(/^\./, '');
+                    updatePreview();
+                }
+            });
+
+            // ===== DOWNLOAD =====
+            document.getElementById('downloadBtn').addEventListener('click', function() {
+                if (!hasCode()) return;
+
+                const filename = getFilename();
+                const url = createFileUrl();
+
+                // Try anchor download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                
+                let clicked = false;
+                try { a.click(); clicked = true; } catch(e) {}
+                
+                // Also load in iframe for mobile fallback
+                setTimeout(() => { downloadFrame.src = url; }, 200);
+
+                // Cleanup
+                setTimeout(() => {
+                    if (document.body.contains(a)) document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    downloadFrame.src = 'about:blank';
+                }, 3000);
+
+                setStatus((clicked ? 'Downloading' : 'Trying to download') + ': ' + filename, clicked ? 'success' : 'info');
+            });
+
+            // ===== OPEN & SAVE =====
+            document.getElementById('openBtn').addEventListener('click', function() {
+                if (!hasCode()) return;
+
+                const filename = getFilename();
+                const url = createFileUrl();
+
+                modalFilename.textContent = filename;
+                openCodeLink.href = url;
+                openCodeLink._blobUrl = url;
+                saveModal.classList.add('show');
+                setStatus('Ready to open: ' + filename, 'info');
+            });
+
+            // Modal: Open link click
+            openCodeLink.addEventListener('click', function() {
+                setTimeout(() => {
+                    saveModal.classList.remove('show');
+                    setStatus('Code opened in new tab. Use browser menu to save.', 'success');
+                }, 300);
+                
+                setTimeout(() => {
+                    if (this._blobUrl) {
+                        URL.revokeObjectURL(this._blobUrl);
+                        this._blobUrl = null;
+                    }
+                }, 3000);
+            });
+
+            // Modal: Close button
+            closeModal.addEventListener('click', function() {
+                saveModal.classList.remove('show');
+                if (openCodeLink._blobUrl) {
+                    URL.revokeObjectURL(openCodeLink._blobUrl);
+                    openCodeLink._blobUrl = null;
+                }
+            });
+
+            // Modal: Click outside
+            saveModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                    if (openCodeLink._blobUrl) {
+                        URL.revokeObjectURL(openCodeLink._blobUrl);
+                        openCodeLink._blobUrl = null;
+                    }
+                }
+            });
+
+            // ===== COPY =====
+            document.getElementById('copyBtn').addEventListener('click', function() {
+                const code = codeInput.value;
+                if (!code.trim()) {
+                    setStatus('Nothing to copy.', 'error');
+                    return;
+                }
+
+                function fallbackCopy(text) {
+                    codeInput.select();
+                    codeInput.setSelectionRange(0, 99999);
+                    try {
+                        document.execCommand('copy');
+                        setStatus('Code copied.', 'success');
+                    } catch(e) {
+                        setStatus('Copy failed. Select and copy manually.', 'error');
+                    }
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(code)
+                        .then(() => setStatus('Code copied to clipboard.', 'success'))
+                        .catch(() => fallbackCopy(code));
+                } else {
+                    fallbackCopy(code);
+                }
+            });
+
+            // ===== CLEAR =====
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                codeInput.value = '';
+                setStatus('Cleared.', 'info');
+            });
+
+            // ===== KEYBOARD SHORTCUT =====
+            codeInput.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('downloadBtn').click();
+                }
+            });
+
+            // Init
+            updatePreview();
+            setTimeout(() => codeInput.focus(), 100);
+        })();
+    </script>
+</body>
+</html>
