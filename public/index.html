@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WhiteDragon-software — minimal software for the open web</title>
-<meta name="description" content="WhiteDragon-software is an open-source organization that develops minimal software on Cloudflare Workers and Pages: an edge AI worker, a forwarding proxy, a multi-tab desktop browser, a community forum, and two source-available licenses.">
+<meta name="description" content="WhiteDragon-software is an open-source organization that develops minimal software on Cloudflare Workers and Node.js: an edge AI worker, a forwarding proxy, a multi-tab desktop browser, a community forum, and two source-available licenses.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0c" media="(prefers-color-scheme: dark)">
-<!-- This file is served from several custom domains on Cloudflare Pages, so no
+<!-- This file is served from several custom domains on Cloudflare Workers, so no
      host is hard-coded. The canonical link is relative and resolves against
      whichever domain served the page. og:url is omitted on purpose: scrapers
      fall back to the URL they actually fetched, which is what we want here. -->
 <link rel="canonical" href="/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="WhiteDragon-software">
-<meta property="og:description" content="Minimal software for the open web, built on Cloudflare Workers and Pages.">
+<meta property="og:description" content="Minimal software for the open web, built on Cloudflare Workers and Node.js.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
 <script>
@@ -494,14 +494,14 @@
     </div>
     <p class="kicker hero-eyebrow"><span class="pulse-dot" aria-hidden="true"></span>Open-source organization</p>
     <h1>Minimal software for the open web.</h1>
-    <p class="lede">WhiteDragon-software is an open-source organization that develops minimal software on Cloudflare Workers and Pages: an edge AI worker, a forwarding proxy, a multi-tab desktop browser, a community forum, and two source-available licenses. Each project uses few dependencies, requires no build step, and is small enough to be read in full.</p>
+    <p class="lede">WhiteDragon-software is an open-source organization that develops minimal software on Cloudflare Workers and Node.js: an edge AI worker, a forwarding proxy, a multi-tab desktop browser, a community forum, and two source-available licenses. Each project uses few dependencies, requires no build step, and is small enough to be read in full.</p>
     <div class="actions">
       <a class="btn btn--solid" href="#projects">View projects <span aria-hidden="true">&#8594;</span></a>
       <a class="btn btn--ghost" href="https://github.com/whitedragon-software">GitHub organization <span class="arw" aria-hidden="true">&#8599;</span></a>
     </div>
     <dl class="facts rv">
       <div><dt>Focus</dt><dd>Edge software</dd></div>
-      <div><dt>Runtime</dt><dd>Cloudflare Workers &amp; Pages</dd></div>
+      <div><dt>Runtime</dt><dd>Cloudflare Workers &amp; Node.js</dd></div>
       <div><dt>Languages</dt><dd>JavaScript &middot; TypeScript &middot; HTML</dd></div>
       <div><dt>Source</dt><dd>Public on GitHub</dd></div>
     </dl>
@@ -545,7 +545,7 @@
               <span class="tab"></span><span class="tab"></span><span class="tab"></span><span class="tab"></span>
             </div>
           </div>
-          <p class="status"><span class="mark mark--exp" aria-hidden="true"></span>Experimental</p>
+          <p class="status"><span class="mark mark--on" aria-hidden="true"></span>Active</p>
         </li>
 
         <li class="project rv">
@@ -616,7 +616,7 @@
         <div class="cell">
           <div class="glyph" aria-hidden="true">&#9632;</div>
           <h3>Edge-first</h3>
-          <p>All projects target Cloudflare Workers and Pages. Deployment occurs on push, no servers require administration, and latency remains low across regions.</p>
+          <p>All projects target Cloudflare Workers and Node.js. Deployment occurs on push, no servers require administration, and latency remains low across regions.</p>
         </div>
         <div class="cell">
           <div class="glyph" aria-hidden="true">&#9650;</div>
@@ -686,7 +686,7 @@
   <section class="section" id="contact">
     <div class="wrap">
       <h2>Feedback and contributions</h2>
-      <p class="s-sub" style="margin-top:14px">Feedback, bug reports and pull requests are welcome, particularly on the experimental projects.</p>
+      <p class="s-sub" style="margin-top:14px">Feedback, bug reports and pull requests are welcome across all the projects.</p>
       <div class="actions">
         <a class="btn btn--solid" href="https://github.com/whitedragon-software">Browse the organization <span class="arw" aria-hidden="true">&#8599;</span></a>
         <a class="btn btn--ghost" href="https://dev.to/whitedragon">Writing on DEV <span class="arw" aria-hidden="true">&#8599;</span></a>
@@ -821,6 +821,60 @@
   }
 })();
 
+/* The dot grid and node network are regenerated with randomized node
+   positions, connections, animation delays and "live" nodes on every
+   page load, so the background never looks identical twice. */
+(function(){
+  var svg = document.querySelector(".bg-net svg");
+  if (!svg) return;
+  var W = 1600;
+  var rows = [
+    { y: 100, n: 9, jitterY: 45 },
+    { y: 300, n: 8, jitterY: 80 },
+    { y: 520, n: 8, jitterY: 50 },
+    { y: 715, n: 7, jitterY: 40 }
+  ];
+  var nodeRows = [];
+  var rowPaths = [];
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r], pts = [];
+    for (var i = 0; i < row.n; i++) {
+      var x = Math.round((i + 0.5) * (W / row.n) + (Math.random() * 40 - 20));
+      var y = Math.round(row.y + (Math.random() * row.jitterY * 2 - row.jitterY));
+      pts.push({ x: x, y: y });
+    }
+    nodeRows.push(pts);
+    var d = "M" + pts.map(function(p){ return p.x + " " + p.y; }).join(" L ");
+    rowPaths.push(d);
+  }
+  var linkPaths = [];
+  for (var r2 = 0; r2 < nodeRows.length - 1; r2++) {
+    var a = nodeRows[r2], b = nodeRows[r2 + 1];
+    for (var i2 = 1; i2 < a.length; i2 += 2) {
+      var best = 0, bestDist = Infinity;
+      for (var j = 0; j < b.length; j++) {
+        var dist = Math.abs(b[j].x - a[i2].x);
+        if (dist < bestDist) { bestDist = dist; best = j; }
+      }
+      linkPaths.push("M" + a[i2].x + " " + a[i2].y + " L" + b[best].x + " " + b[best].y);
+    }
+  }
+  var gOpen = '<g class="nl">';
+  var gPaths = rowPaths.concat(linkPaths).map(function(d){ return '<path d="' + d + '"/>'; }).join("");
+  var gClose = '</g>';
+  var circles = [];
+  for (var r3 = 0; r3 < nodeRows.length; r3++) {
+    var pts3 = nodeRows[r3];
+    var liveIdx = Math.floor(Math.random() * pts3.length);
+    for (var k2 = 0; k2 < pts3.length; k2++) {
+      var p = pts3[k2], live = (k2 === liveIdx);
+      var delay = (Math.random() * 6.6).toFixed(2) + "s";
+      circles.push('<circle class="nn' + (live ? ' live' : '') + '" cx="' + p.x + '" cy="' + p.y + '" r="' + (live ? "4.6" : "4") + '" style="animation-delay:' + delay + '"/>');
+    }
+  }
+  svg.innerHTML = gOpen + gPaths + gClose + circles.join("");
+})();
+
 /* Ambient background drift: the dot grid and network mesh shift at
    different speeds as the page scrolls, so the background feels alive without ever animating on its
    own — it only moves because the person is moving. Skipped outright
@@ -844,4 +898,4 @@
 })();
 </script>
 </body>
-     </html>
+         </html>
