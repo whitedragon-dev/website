@@ -203,6 +203,56 @@
   var y = document.getElementById("year");
   if (y) { y.textContent = new Date().getFullYear(); }
 })();
+
+/* The node network is regenerated with randomized node positions,
+   connections, animation delays and "live" nodes on every page load,
+   so the background never looks identical twice. */
+(function(){
+  var svg = document.querySelector(".bg-net svg");
+  if (!svg) return;
+  var W = 1600;
+  var rows = [
+    { y: 105, n: 9, jitterY: 50 },
+    { y: 515, n: 8, jitterY: 50 },
+    { y: 735, n: 7, jitterY: 35 }
+  ];
+  var nodeRows = [];
+  var rowPaths = [];
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r], pts = [];
+    for (var i = 0; i < row.n; i++) {
+      var x = Math.round((i + 0.5) * (W / row.n) + (Math.random() * 40 - 20));
+      var y2 = Math.round(row.y + (Math.random() * row.jitterY * 2 - row.jitterY));
+      pts.push({ x: x, y: y2 });
+    }
+    nodeRows.push(pts);
+    rowPaths.push("M" + pts.map(function(p){ return p.x + " " + p.y; }).join(" L "));
+  }
+  var linkPaths = [];
+  for (var r2 = 0; r2 < nodeRows.length - 1; r2++) {
+    var a = nodeRows[r2], b = nodeRows[r2 + 1];
+    for (var i2 = 1; i2 < a.length; i2 += 2) {
+      var best = 0, bestDist = Infinity;
+      for (var j = 0; j < b.length; j++) {
+        var dist = Math.abs(b[j].x - a[i2].x);
+        if (dist < bestDist) { bestDist = dist; best = j; }
+      }
+      linkPaths.push("M" + a[i2].x + " " + a[i2].y + " L" + b[best].x + " " + b[best].y);
+    }
+  }
+  var gPaths = rowPaths.concat(linkPaths).map(function(d){ return '<path d="' + d + '"/>'; }).join("");
+  var circles = [];
+  for (var r3 = 0; r3 < nodeRows.length; r3++) {
+    var pts3 = nodeRows[r3];
+    var liveIdx = Math.floor(Math.random() * pts3.length);
+    for (var k2 = 0; k2 < pts3.length; k2++) {
+      var p = pts3[k2], live = (k2 === liveIdx);
+      var delay = (Math.random() * 6.6).toFixed(2) + "s";
+      circles.push('<circle class="nn' + (live ? ' live' : '') + '" cx="' + p.x + '" cy="' + p.y + '" r="' + (live ? "4.6" : "4") + '" style="animation-delay:' + delay + '"/>');
+    }
+  }
+  svg.innerHTML = '<g class="nl">' + gPaths + '</g>' + circles.join("");
+})();
 </script>
 </body>
-          </html>
+</html>
