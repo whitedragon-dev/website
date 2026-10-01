@@ -247,6 +247,13 @@
      Each term stays lit once reached instead of one at a time (dbk) or
      travelling (trace) — a document being read term by term, not a live
      process, so the three boxes fill in and hold before the loop resets. */
+  .otp{margin-top:20px;max-width:190px}
+  .otp-code{display:flex;gap:5px}
+  .otp-code i{flex:1;height:22px;border:1.4px solid var(--line);border-radius:4px;background:var(--soft)}
+  .otp-bar{height:3px;border-radius:2px;background:var(--line);margin-top:9px;position:relative;overflow:hidden}
+  .otp-bar::after{content:"";position:absolute;top:0;bottom:0;left:0;width:100%;background:var(--accent);transform-origin:left;animation:otp-drain 6s linear infinite}
+  .otp.paused .otp-bar::after{animation-play-state:paused}
+  @keyframes otp-drain{0%{transform:scaleX(1)}100%{transform:scaleX(0)}}
   .chk{display:flex;gap:8px;margin-top:20px}
   .chk .box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line);animation-duration:5s;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
   .chk .box:nth-child(1){animation-name:chk-a}
@@ -331,6 +338,7 @@
     .aiw .dot{animation:none}
     .merge .src,.merge-bar::after{animation:none}
     .chk .box{animation:none}
+    .otp-bar::after{animation:none;transform:scaleX(.6)}
     .chk .box:nth-child(1),.chk .box:nth-child(2){border-color:var(--accent);background:var(--accent)}
     .term-cmd{animation:none;width:15ch;border-right-color:transparent}
     .term-out{animation:none;opacity:1}
@@ -512,9 +520,9 @@
       <div class="s-head">
         <div>
           <h2>Projects</h2>
-          <p class="s-sub">The six principal projects maintained by the organization.</p>
+          <p class="s-sub">The seven principal projects maintained by the organization.</p>
         </div>
-        <p class="kicker">06 selected</p>
+        <p class="kicker">07 selected</p>
       </div>
 
       <ol class="projects">
@@ -565,6 +573,20 @@
         <li class="project rv">
           <div class="p-num" aria-hidden="true">04</div>
           <div class="p-body">
+            <h3 class="p-title"><a href="https://github.com/whitedragon-software/whitedragon-authenticator">whitedragon-authenticator <span class="arw" aria-hidden="true">&#8599;</span></a></h3>
+            <p class="p-desc">A TOTP authenticator served by a single Cloudflare Worker. Codes are computed in the browser, account data is stored in Workers KV rather than localStorage, and the whole app sits behind one shared password.</p>
+            <ul class="tags"><li>Cloudflare Workers</li><li>TOTP</li><li>Workers KV</li></ul>
+            <div class="otp" aria-hidden="true">
+              <div class="otp-code"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="otp-bar"></div>
+            </div>
+          </div>
+          <p class="status"><span class="mark mark--on" aria-hidden="true"></span>Active</p>
+        </li>
+
+        <li class="project rv">
+          <div class="p-num" aria-hidden="true">05</div>
+          <div class="p-body">
             <h3 class="p-title"><a href="https://github.com/whitedragon-software/whitedragon-forum">whitedragon-forum <span class="arw" aria-hidden="true">&#8599;</span></a></h3>
             <p class="p-desc">The community space for the organization, built on git-forums and GitHub Discussions, so that discussion threads, issues and source code remain in a single location rather than on a separate platform.</p>
             <ul class="tags"><li>GitHub Discussions</li><li>git-forums</li><li>Community</li></ul>
@@ -578,7 +600,7 @@
         </li>
 
         <li class="project rv">
-          <div class="p-num" aria-hidden="true">05</div>
+          <div class="p-num" aria-hidden="true">06</div>
           <div class="p-body">
             <h3 class="p-title"><a href="https://github.com/whitedragon-software/WD-NCL">WD-NCL <span class="arw" aria-hidden="true">&#8599;</span></a></h3>
             <p class="p-desc">A non-commercial open-source license written from scratch, incorporating an absolute liability waiver. Short identifier: WD-NCL v1.0.</p>
@@ -590,7 +612,7 @@
         </li>
 
         <li class="project rv">
-          <div class="p-num" aria-hidden="true">06</div>
+          <div class="p-num" aria-hidden="true">07</div>
           <div class="p-body">
             <h3 class="p-title"><a href="https://github.com/whitedragon-software/WD-SAL">WD-SAL <span class="arw" aria-hidden="true">&#8599;</span></a></h3>
             <p class="p-desc">A source-available open-source license, also written from scratch, that adds an explicit patent grant (with a termination clause for patent litigation), a no-sublicensing restriction, and an even stronger liability disclaimer than WD-NCL. Short identifier: WD-SAL v1.0.</p>
@@ -812,7 +834,7 @@
      of view instead of letting it run indefinitely off-screen. Kept as its
      own observer (rather than reusing io above) because it must keep
      watching after the first intersection, unlike the one-shot reveal. */
-  var traces = document.querySelectorAll(".trace, .dbk, .aiw, .merge, .chk, .hero-art, .term, .bg-net");
+  var traces = document.querySelectorAll(".trace, .dbk, .aiw, .merge, .chk, .otp, .hero-art, .term, .bg-net");
   if (traces.length) {
     var traceIO = new IntersectionObserver(function(entries){
       entries.forEach(function(e){ e.target.classList.toggle("paused", !e.isIntersecting); });
